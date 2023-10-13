@@ -17,18 +17,18 @@ If you do it by USB Storage be sure you create the folders on the root of it bef
 
 Root USB Storage
 
-|__ apk
-|__ config
-|__ magisk_modules
+|__apk
+|__config
+|__magisk_modules
 
 Only boot your ATV once USB storage is inserted or ethernet cable plugged.
 
 At every start, if a USB Storage is inserted, it will copy the files to:
 /sdcard/Download/
 
-|__ apk
-|__ config
-|__ magisk_modules
+|__apk
+|__config
+|__magisk_modules
 
 Only on first start the modules get setup on magisk.
 
