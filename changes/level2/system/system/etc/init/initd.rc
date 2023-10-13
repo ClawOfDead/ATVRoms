@@ -1,0 +1,11 @@
+# execute the binary when boot is completed
+
+chown 0.0 /etc/init/initd.rc
+chmod 0644 /etc/init/initd.rc
+chcon u:object_r:system_file:s0 /etc/init/initd.rc
+
+on property:sys.boot_completed=1
+exec_background u:r:magisk:s0 -- /system/bin/initd.sh
+    user root
+    group root 
+    oneshot
