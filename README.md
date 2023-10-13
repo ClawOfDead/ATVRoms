@@ -1,5 +1,5 @@
 # ATVRoms
-Here is the Github to have last updated versions of PoGoRom for ATV:
+Here is the Github to have last updated versions of PoGoRom A9 x64 for ATV:
 
 Currently supported ATV's:
 -  A95XF1 (S905W) - 2GB of RAM only
