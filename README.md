@@ -3,7 +3,7 @@ Here is the Github to have last updated versions of PoGoRom for ATV:
 
 Currently supported ATV's:
 -  A95XF1 (S905W) - 2GB of RAM only
--  X96 mini (S905W) confirmed working - 2GB of RAM only (Need adb reboot update for new flashing | Button reset not Working)
+-  X96 mini (S905W) confirmed working - 2GB of RAM only (Need adb reboot update or jump shock for new flashing | Button reset not Working)
 
 __Instructions for the init:__
 
