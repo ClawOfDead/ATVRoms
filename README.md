@@ -16,6 +16,7 @@ Choose if you’re installing modules by USB storage or ethernet (wifi not suppo
 If you do it by USB Storage be sure you create the folders on the root of it before plugin it:
 
 Root USB Storage
+
 |__ apk
 |__ config
 |__ magisk_modules
@@ -24,6 +25,7 @@ Only boot your ATV once USB storage is inserted or ethernet cable plugged.
 
 At every start, if a USB Storage is inserted, it will copy the files to:
 /sdcard/Download/
+
 |__ apk
 |__ config
 |__ magisk_modules
