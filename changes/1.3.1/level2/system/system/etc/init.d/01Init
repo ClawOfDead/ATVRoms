@@ -1,0 +1,382 @@
+#!/system/bin/sh
+# version local 1.1.1
+
+# This sets up a S905w atv. After 6 minutes or so, you should be good to go.
+
+useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0"
+magisk="/sbin/magisk"
+url_fix="https://github.com/ClawOfDead/ATV/releases/download/v1.0/Fix.zip"
+
+downloaddir=/sdcard/Download
+tmpdir=/data/local/tmp/init
+configdir=/data/local/tmp
+apkdir="$downloaddir/apk"
+modulesdir="$downloaddir/magisk_modules"
+usrdir=/sdcard
+logfile=$tmpdir/initrom.log
+apk_copy_done=false
+modules_copy_done=false
+config_copy_done=false
+
+cd `dirname $0`
+
+wait_for_sdcard() {
+    i=0
+    while [ $i -lt 20 -a ! -d $downloaddir ]; do
+        sleep 1
+        i=`expr $i + 1`
+    done
+}
+
+wait_for_sdcard
+
+makedir(){
+	mkdir -p $apkdir $modulesdir $tmpdir
+}
+
+if [ ! -f $tmpdir/mkdir ]; then
+	makedir
+	touch $tmpdir/mkdir
+fi
+
+touch "$logfile"
+exec >>"$logfile" 2>&1
+
+log() {
+    line="`date +'[%Y-%m-%dT%H:%M:%S %Z]'` $@"
+    echo "$line"
+}
+
+delete_tmp_files(){
+	log 'Deleting init temp files'
+	find $tmpdir ! -name 'initrom.log' ! -name 'mkdir' ! -name 'network' -type f -exec rm -f {} +
+}
+
+download(){
+	until curl -k -L -A "$useragent" -o "$moduledir/fix.zip" "$url_fix"; do
+		sleep 10
+	done
+}
+
+wait_for_network() {
+    i=0
+    got_net=0
+
+    while [ $i -lt 6 ]; do
+        if [ $i -gt 0 ]; then
+            sleep 5
+        fi
+        i=`expr $i + 1`
+        ping -c1 -W 5 8.8.8.8 > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            got_net=1
+            break
+        fi
+    done
+
+    if [ $got_net -eq 0 ]; then
+        log 'Failed to get network'
+        exit 1
+    fi
+}
+
+wait_for_usb_device() {
+    log 'Searching for USB storages'
+    
+    for USB_MOUNT in $(ls /mnt/media_rw); do
+        USB_MOUNT_POINT="/mnt/media_rw/$USB_MOUNT"
+
+        if [ -d "$USB_MOUNT_POINT" ]; then
+            log 'USB storage found'
+
+            # Check for "apk" directory and perform the operation only once
+            if [ -d "$USB_MOUNT_POINT/apk" ] && ! $apk_copy_done; then
+                log 'Copying files from apk directory'
+                rsync -av --ignore-existing "$USB_MOUNT_POINT/apk/" "$apkdir/"
+                sleep 10
+                log 'Files copied from USB storage to apk directory'
+                apk_copy_done=true  # Set the flag to indicate the operation has been performed
+            # Check for "magisk_modules" directory and perform the operation only once
+            elif [ -d "$USB_MOUNT_POINT/magisk_modules" ] && ! $modules_copy_done; then
+                log 'Copying files from Magisk Modules directory'
+                rsync -av --ignore-existing "$USB_MOUNT_POINT/magisk_modules/" "$modulesdir/"
+                sleep 10
+                log 'Files copied from USB storage to Magisk Modules directory'
+                modules_copy_done=true  # Set the flag to indicate the operation has been performed
+            # Check for "config" directory and perform the operation only once
+            elif [ -d "$USB_MOUNT_POINT/config" ] && ! $config_copy_done; then
+                log 'Copying files from config directory'
+                rsync -av --ignore-existing "$USB_MOUNT_POINT/config/" "$configdir/"
+                sleep 10
+                log 'Files copied from USB storage to config directory'
+                config_copy_done=true  # Set the flag to indicate the operation has been performed
+            fi
+			return 0
+        fi
+    done
+
+    log 'No USB device found. Continuing without copying.'
+    sleep 5
+    return 1
+}
+
+
+
+
+add_setup_magisk () {
+	log 'Check if the Magisk additional setup "OK" button has already been tapped'
+	if [ ! -f $tmpdir/magiskinit ]; then
+
+		if [ ! -f "$magisk" ]; then
+			log 'Magisk missing! wait additional 30sec'
+			sleep 30
+		fi
+
+
+		if [ -f "$magisk" -a  ! -f /data/adb/magisk.db ]; then
+			am start com.topjohnwu.magisk/.ui.MainActivity
+			sleep 15
+			touch $tmpdir/magiskinit
+			log 'Magisk additional setup Done. ATV will reboot.'
+			input tap 1850 540
+			sleep 10
+		fi
+	fi
+}
+
+do_settings() {
+	if [ ! -f $tmpdir/set ]; then
+		settings put global policy_control 'immersive.navigation=*'
+		settings put global policy_control 'immersive.null=*'
+		settings put secure immersive_mode_confirmations confirmed
+		settings put global heads_up_enabled 0
+		settings put global bluetooth_disabled_profiles 1
+		settings put global bluetooth_on 0
+		settings put global package_verifier_user_consent -1
+		touch $tmpdir/set
+	fi
+}
+
+setup_root_for_shell() {
+	if [ ! -f $tmpdir/rootsetup ]; then
+		ver=`dumpsys package com.topjohnwu.magisk | grep versionName | sed -e 's/ //g' | awk -F= '{ print $2 }'`
+		if [ -n "$ver" ]; then
+			log 'Found magisk package. Attempting to repackage and hide it..'
+			output=`am start com.topjohnwu.magisk/.ui.MainActivity 2>&1`
+			echo $output
+			sleep 5
+			# Go to home:
+			input tap 39 42
+			sleep 2
+			# touch settings:
+			input tap 1875 100
+			sleep 3
+			# down
+			for i in $(seq 1 14); do
+				input keyevent 20
+			done
+			sleep 2
+			# touch 'Automatic Response'
+			input keyevent 66
+			sleep 2
+			# down
+			for i in $(seq 1 3); do
+				input keyevent 20
+			done
+			sleep 1
+			# select 'Grant'
+			input keyevent 66
+			sleep 2
+			for i in $(seq 1 2); do
+				input keyevent BACK
+			done
+			touch $tmpdir/rootsetup
+			sleep 2
+			# that's it.
+		fi
+	fi
+	sleep 5
+}
+
+setup_magisk_settings() {
+	if [ ! -f $tmpdir/magiskset ]; then
+		denylist_count=`magisk --sqlite 'select count(*) from denylist' | awk -F= '{ print $2 }'`
+
+		# root access for shell:
+		shell_uid=`id -u shell`
+		/sbin/magisk --sqlite "REPLACE INTO policies (uid,policy,until,logging,notification) VALUES($shell_uid,2,0,1,1);"
+
+		if [ `id -u` -ne 0 ]; then
+			log 'Root is needed from this point forward. Re-run as root.'
+			exit 1
+		fi
+
+		# enable zygisk
+		/sbin/magisk --sqlite "REPLACE INTO settings (key,value) VALUES('zygisk',1);"
+		# enable denylist
+		/sbin/magisk --sqlite "REPLACE INTO settings (key,value) VALUES('denylist',1);"
+
+		# add packages to denylist
+		/sbin/magisk --sqlite "REPLACE INTO denylist (package_name,process) VALUES('com.google.android.gms','com.google.android.gms');"
+		/sbin/magisk --sqlite "REPLACE INTO denylist (package_name, process) VALUES ('com.google.android.gms', 'com.google.android.gms.unstable');"
+		/sbin/magisk --sqlite "REPLACE INTO denylist (package_name,process) VALUES('com.nianticlabs.pokemongo','com.nianticlabs.pokemongo');"
+
+		denylist_count_now=`$magisk --sqlite 'select count(*) from denylist' | awk -F= '{ print $2 }'`
+		if [ $denylist_count -ne $denylist_count_now ]; then
+			log 'Updated magisk DB for zygisk,su policy,denylist'
+		fi
+		touch $tmpdir/magiskset
+		sleep 5
+	fi
+}
+
+install_magisk_modules() {
+	if [ $? -eq 0 ]; then
+		if [ ! -f "$tmpdir/magiskmod" ]; then
+			log 'Installing magisk module local files'
+			if [ -d "$modulesdir" ]; then
+				log 'Searching all the modules in the folder'
+				for module_file in "$modulesdir"/*; do
+					if [ -f "$module_file" ]; then
+						log "Installing module $module_file"
+						"$magisk" --install-module "$module_file"
+						log 'Waiting 15 seconds before processing the next file'
+						touch "$tmpdir/magiskmod"
+						sleep 15
+					fi
+				done
+			else
+				echo "Folder not found: $modulesdir"
+				exit 1
+			fi
+		else
+			echo "Magisk module installation already in progress. Skipping."
+		fi
+	else
+		if [ -n "$url_fix" ]; then
+			log 'Downloading fix'
+			download
+			sleep 5
+			log 'Installing the fix downloaded'
+			"$magisk" --install-module "$moduledir/fix.zip"
+			touch "$tmpdir/magiskmod"
+			sleep 15
+		else
+			log 'URL for thefix not found. Skipping module installation.'
+		fi
+	fi
+	sleep 5
+}
+
+repackage_magisk() {
+    ver=`dumpsys package com.topjohnwu.magisk | grep versionName | sed -e 's/ //g' | awk -F= '{ print $2 }'`
+    if [ -n "$ver" ]; then
+        log 'Found magisk package. Attempting to repackage and hide it..'
+        output=`am start com.topjohnwu.magisk/.ui.MainActivity 2>&1`
+        echo $output
+        sleep 12
+        # Go to home:
+        input tap 39 42
+        sleep 2
+        # touch settings:
+        input tap 1875 100
+        sleep 4
+        # down
+        for i in $(seq 1 7); do
+			input keyevent 20
+		done
+        sleep 2
+        # touch 'Hide the Magisk app'
+        input keyevent 66
+        sleep 2
+        # Select 'Magisk' from 'install unknown apps sidebar'
+        input keyevent 61
+        sleep 2
+        input keyevent 66
+        sleep 1
+        input keyevent BACK
+        sleep 3
+        # touch 'Hide the Magisk app' again
+        input keyevent 66
+        sleep 2
+        # down
+        for i in $(seq 1 3); do
+			input keyevent 61
+		done
+        # touch OK
+        input keyevent 66
+        sleep 15
+        # This will take a bit of time and the app will restart
+        # and ask if you want shortcut on home screen.
+		input keyevent HOME
+		sleep 50
+    fi
+}
+
+clear_google_data(){
+	if [ ! -f $tmpdir/gdata ]; then
+		pm clear com.android.vending
+		sleep 5
+		pm clear com.google.android.gms
+		log 'Cleared Google Apps Data'
+		touch $tmpdir/gdata
+		sleep 10
+	fi
+}
+
+launch_integrity_check(){
+	if [ ! -f $tmpdir/integritychk ]; then
+		am start com.henrikherzig.playintegritychecker/.MainActivity
+		sleep 10
+		input tap 990 560
+		log 'Launch Play Integrity Check'
+		touch $tmpdir/integritychk
+		sleep 5
+	fi
+}
+
+
+log 'ATV Booted.'
+
+wait_for_usb_device
+
+if [ $? -eq 1 ]; then
+	if [ ! -f $tmpdir/network ]; then
+		log 'No USB storage detected, network setup'
+		log 'Waiting for network'
+		wait_for_network
+		log 'Network is up'
+	fi
+fi
+
+
+if [ ! -f $tmpdir/initend ]; then
+	
+	add_setup_magisk
+	
+	log 'Making sure we do not get pop-ups...'
+	do_settings
+
+	log 'Get root for shell...'
+	setup_root_for_shell
+
+	if [ -f /data/adb/magisk.db ]; then
+		setup_magisk_settings
+		wait_for_usb_device
+		install_magisk_modules
+		touch $tmpdir/network
+		repackage_magisk
+	fi
+	clear_google_data
+	delete_tmp_files
+	touch $tmpdir/initend
+	
+	log 'DONE!'
+	
+	sleep 15
+	reboot
+fi
+
+launch_integrity_check
+
+exit 0
