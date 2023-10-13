@@ -32,8 +32,10 @@ At every start, if a USB Storage is inserted, it will copy the files to:
 
 Only on first start the modules get setup on magisk.
 
-Now boot your ATV and don’t touch anything (be patient...) just watch it doing the stuff. It will reboot like 3 times to get all set. 
+Now boot your ATV and don’t touch anything (be patient...) just watch it doing the stuff. It will reboot like 3 times to get all set.
+
 Avoid Adb till the end, it will slow down the process and trick the timings.
+
 If you touch something while the script is getting the setup done you will have to reflash it as it only runs 1 time to avoid loops.
 
 Once you see the play integrity results you can take control.
