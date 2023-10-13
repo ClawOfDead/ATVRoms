@@ -7,7 +7,7 @@ Currently supported ATV's:
 
 __Instructions for the init:__
 
-Read this carefully before flashing.
+Read this carefully before flashing.
 
 Once booted it should take 12 min to be setup. 
 It will take 3 min to install Magisk and Integrity apk. So be patient if you don't see anything moving.
