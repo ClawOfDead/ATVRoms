@@ -9,8 +9,9 @@ __Instructions for the init:__
 
 Read this carefully before flashing.
 
-Once booted it should take 12 min to be setup. 
-It will take 3 min to install Magisk and Integrity apk. So be patient if you don't see anything moving.
+Once booted it should take 20 min to be setup. 
+It will take 3 min to install Magisk and Integrity apk. So be patient if you don't see anything moving. 
+You will see several times the desktop without anything moving but it's actually doing stuff in the background
 
 Choose if you’re installing modules + apk by USB storage or ethernet (wifi not supported atm)
 If you do it by USB Storage be sure you create the folders on the root of it before plugin it:
@@ -41,4 +42,4 @@ Avoid Adb till the end, it will slow down the process and trick the timings.
 If you touch something while the script is getting the setup done you will have to reflash it as it only runs 1 time to avoid loops.
 
 Once you see the play integrity results you can take control.
-Install Pogo, MITM and enjoy ;)
+Install Pogo, MITM (if done by network or no apk provided in the usb storage), don't forget your proxy and enjoy ;)
