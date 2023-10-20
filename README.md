@@ -1,9 +1,9 @@
 # ATVRoms
 Here is the Github to have last updated versions of PoGoRom A9 x64 for ATV:
 
-Currently supported ATV's:
--  A95XF1 (S905W) - 2GB of RAM only
--  X96 mini (S905W) confirmed working - 2GB of RAM only (Need adb reboot update or jump shock for new flashing | Button reset not Working)
+Currently supported ATV's (Download the right ROM for your device):
+-  A95XF1 (S905W) - 1GB & 2GB RAM
+-  X96 mini (S905W) 1GB & 2GB RAM
 
 __Instructions for the init:__
 
@@ -12,7 +12,7 @@ Read this carefully before flashing.
 Once booted it should take 12 min to be setup. 
 It will take 3 min to install Magisk and Integrity apk. So be patient if you don't see anything moving.
 
-Choose if you’re installing modules by USB storage or ethernet (wifi not supported atm)
+Choose if you’re installing modules + apk by USB storage or ethernet (wifi not supported atm)
 If you do it by USB Storage be sure you create the folders on the root of it before plugin it:
 
 Root USB Storage
@@ -24,14 +24,17 @@ Only boot your ATV once USB storage is inserted or ethernet cable plugged.
 
 At every start, if a USB Storage is inserted, it will copy the files to:
 
+Apk and modules:
 /sdcard/Download/
 |__apk
-|__config
 |__magisk_modules
 
-Only on first start the modules get setup on magisk.
+Config files:
+/data/local/tmp/
 
-Now boot your ATV and don’t touch anything (be patient...) just watch it doing the stuff. It will reboot like 3 times to get all set.
+Only on first start the modules get setup on magisk and apk installed.
+
+Now boot your ATV and don’t touch anything (be patient...) just watch it doing the stuff. It will reboot like 2 times to get all set.
 
 Avoid Adb till the end, it will slow down the process and trick the timings.
 
