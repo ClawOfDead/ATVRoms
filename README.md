@@ -5,5 +5,5 @@ Currently supported ATV's (Download the right ROM for your device):
 -  A95XF1 (S905W) 1GB & 2GB RAM
 -  X96 mini (S905W) 1GB & 2GB RAM
 
-__Documentation:__
+__How to flash and initialize the rom:__
 https://github.com/ClawOfDead/ATVRoms/wiki
